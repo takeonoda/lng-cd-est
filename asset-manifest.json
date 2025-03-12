@@ -1,0 +1,15 @@
+{
+  "files": {
+    "main.css": "/takeonoda/lng-cd-est/static/css/main.e6c13ad2.css",
+    "main.js": "/takeonoda/lng-cd-est/static/js/main.a8686478.js",
+    "static/js/453.66de68d7.chunk.js": "/takeonoda/lng-cd-est/static/js/453.66de68d7.chunk.js",
+    "index.html": "/takeonoda/lng-cd-est/index.html",
+    "main.e6c13ad2.css.map": "/takeonoda/lng-cd-est/static/css/main.e6c13ad2.css.map",
+    "main.a8686478.js.map": "/takeonoda/lng-cd-est/static/js/main.a8686478.js.map",
+    "453.66de68d7.chunk.js.map": "/takeonoda/lng-cd-est/static/js/453.66de68d7.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.a8686478.js"
+  ]
+}
