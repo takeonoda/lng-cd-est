@@ -49,5 +49,5 @@ The **LNG Cooldown Calculator** is a tool designed to calculate the required coo
 
 
    
-You can copy and paste this into your GitHub README file, and it should display properly. Let me know if you need further tweaks!
+
 
