@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Card from './components/card';      // Corrected path
 import Input from './components/input';    // Corrected path
 import Button from './components/button';  // Corrected path
+import { HashRouter as Router, Route, Switch } from 'react-router-dom';
 
 
 const materials = [
