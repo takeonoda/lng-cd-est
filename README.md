@@ -28,26 +28,24 @@ The **LNG Cooldown Calculator** is a tool designed to calculate the required coo
 
 ## How to Use
 
-1. **Input Parameters:**
-   - Tank dimensions (or volume/weight) and material properties.
-   - Initial and target temperature, with a defined cooling rate.
-   - LIN vapor and liquid flow rates.
-   
-2. **Run the Calculation:**
-   - The tool will calculate the cooling duration, flow rates, and liquid volumes required for each phase.
-   - Total hours for the process, including LIN volumes with contingency.
+1. **Access the Calculator:**
+   - Click the deployment link to access the calculator: [LNG Cooldown Calculator](https://takeonoda.github.io/lng-cd-est/).
 
-3. **Results:**
-   - Provides detailed output with cooling time breakdown, required LIN/LNG volumes, and final LIN volume with contingency.
+2. **Input Parameters:**
+   - Enter the tank dimensions (or volume/weight) and material properties.
+   - Set the initial and target temperature, and define the cooling rate.
+   - Enter the LIN vapor and liquid flow rates for each cooling phase.
    
+3. **Run the Calculation:**
+   - The calculator will determine the cooling duration, flow rates, and liquid volumes required for each cooling phase.
+   - Total hours for the process, including LIN volumes with contingency, will be displayed.
+
+4. **Review Results:**
+   - Detailed output includes cooling time breakdown, required LIN/LNG volumes, and final LIN volume with contingency.
+
 ## Installation
 
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/takeonoda/lng-cd-est.git
-
-
-   
-
-
+   git clone https://github.com/yourusername/lng-cooldown-calculator.git
