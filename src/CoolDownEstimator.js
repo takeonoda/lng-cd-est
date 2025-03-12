@@ -1,9 +1,4 @@
 import React, { useState } from 'react';
-import Card from './components/card';      // Corrected path
-import Input from './components/input';    // Corrected path
-import Button from './components/button';  // Corrected path
-import { HashRouter as Router, Route, Switch } from 'react-router-dom';
-
 
 const materials = [
   { name: 'Carbon Steel', density: 7850, specificHeat: 500 },
@@ -15,44 +10,54 @@ const materials = [
 
 const CoolDownEstimator = () => {
   const [tankVolume, setTankVolume] = useState('');
+  const [tankHeight, setTankHeight] = useState('');
+  const [tankDiameter, setTankDiameter] = useState('');
   const [tankWallThickness, setTankWallThickness] = useState('');
-  const [tankMaterial, setTankMaterial] = useState(materials[1]);
-  const [pipelineLength, setPipelineLength] = useState('');
-  const [pipelineDiameter, setPipelineDiameter] = useState('');
-  const [pipelineMaterial, setPipelineMaterial] = useState(materials[1]);
+  const [tankMaterial, setTankMaterial] = useState(materials[0]);
   const [initialTemperature, setInitialTemperature] = useState('');
   const [targetTemperature, setTargetTemperature] = useState('');
-  const [contingencyFactor, setContingencyFactor] = useState('');
   const [LINFlowRate, setLINFlowRate] = useState('');
   const [LNGFlowRate, setLNGFlowRate] = useState('');
+  const [pipelineLength, setPipelineLength] = useState(''); // New pipeline input
+  const [pipelineDiameter, setPipelineDiameter] = useState(''); // New pipeline input
+  const [contingencyFactor, setContingencyFactor] = useState('');
+  const [coolingRate, setCoolingRate] = useState('');
   const [results, setResults] = useState(null);
 
   const calculateValues = () => {
-    const deltaTLIN = initialTemperature - (-160); // LIN cooling down to -160°C
-    const deltaTLNG = -160 - targetTemperature; // LNG cooling below -160°C
-    const pipelineRadius = (pipelineDiameter / 1000) / 2;
-    const pipelineVolume = Math.PI * Math.pow(pipelineRadius, 2) * pipelineLength;
-    const totalSystemMass = (tankVolume * tankMaterial.density) + (pipelineVolume * pipelineMaterial.density);
+    const deltaT_vaporLIN = initialTemperature - (-120); // Vapor LIN cooling to -120°C
+    const deltaT_LIN = -120 - (-160); // LIN cooling to -160°C
+    const deltaT_LNG = -160 - targetTemperature; // LNG cooling below -160°C
 
-    // LIN Phase
-    const heatLoadLIN = totalSystemMass * tankMaterial.specificHeat * deltaTLIN;
-    const latentHeatLIN = 200; // Example latent heat of LIN
-    const requiredLINVolume = heatLoadLIN / (latentHeatLIN + (tankMaterial.specificHeat * deltaTLIN));
-    const LINCooldownDuration = requiredLINVolume / LINFlowRate;
+    const tankRadius = (tankDiameter / 2) / 1000; // Convert to meters
+    const tankSurfaceArea = 2 * Math.PI * tankRadius * tankHeight + 2 * Math.PI * Math.pow(tankRadius, 2);
+    const tankVolumeInternal = Math.PI * Math.pow(tankRadius, 2) * tankHeight;
+    const tankWeight = tankVolume ? tankVolume * tankMaterial.density : tankSurfaceArea * tankWallThickness / 1000 * tankMaterial.density;
 
-    // LNG Phase
-    const heatLoadLNG = totalSystemMass * tankMaterial.specificHeat * deltaTLNG;
-    const latentHeatLNG = 500; // Example latent heat of LNG
-    const requiredLNGVolume = heatLoadLNG / (latentHeatLNG + (tankMaterial.specificHeat * deltaTLNG));
+    // Phase 1: Vapor LIN cooling
+    const heatLoadVaporLIN = tankWeight * tankMaterial.specificHeat * deltaT_vaporLIN;
+    const latentHeatLIN = 200 * 1000; // Latent heat of LIN in J/kg
+    const requiredVaporLINVolume = heatLoadVaporLIN / latentHeatLIN;
+
+    // Phase 2: LIN cooling
+    const heatLoadLIN = tankWeight * tankMaterial.specificHeat * deltaT_LIN;
+    const requiredLINVolume = heatLoadLIN / latentHeatLIN;
+    const totalLINVolume = requiredVaporLINVolume + requiredLINVolume;
+
+    // Phase 3: LNG cooling
+    const heatLoadLNG = tankWeight * tankMaterial.specificHeat * deltaT_LNG;
+    const latentHeatLNG = 512 * 1000; // Latent heat of LNG in J/kg
+    const requiredLNGVolume = heatLoadLNG / latentHeatLNG;
+
+    // Contingency
+    const finalLINVolumeWithSafety = totalLINVolume * (1 + contingencyFactor / 100);
+
+    // Cooling duration
+    const LINCooldownDuration = totalLINVolume / LINFlowRate;
     const LNGCooldownDuration = requiredLNGVolume / LNGFlowRate;
+    const totalDuration = LINCooldownDuration + LNGCooldownDuration;
 
-    // Maximum allowable LIN flow rate before exceeding the cooling limit of 12.5°C/hour
-    const maxCoolingRatePerHour = 12.5;
-    const maxLINFlowRate = (heatLoadLIN / (maxCoolingRatePerHour * tankMaterial.specificHeat * totalSystemMass)) / 16; // Cooling duration of 16 hours
-
-    const finalLNGVolumeWithSafety = requiredLNGVolume * (1 + contingencyFactor / 100);
-
-    setResults({ LINCooldownDuration, LNGCooldownDuration, requiredLINVolume, finalLNGVolumeWithSafety, maxLINFlowRate });
+    setResults({ LINCooldownDuration, LNGCooldownDuration, requiredVaporLINVolume, requiredLINVolume, finalLINVolumeWithSafety, totalDuration });
   };
 
   return (
@@ -66,6 +71,26 @@ const CoolDownEstimator = () => {
             value={tankVolume}
             onChange={(e) => setTankVolume(e.target.value)}
             placeholder="Enter tank volume"
+            className="border p-2 rounded"
+          />
+        </div>
+        <div>
+          <label>Tank Height (m)</label>
+          <input
+            type="number"
+            value={tankHeight}
+            onChange={(e) => setTankHeight(e.target.value)}
+            placeholder="Enter tank height"
+            className="border p-2 rounded"
+          />
+        </div>
+        <div>
+          <label>Tank Diameter (m)</label>
+          <input
+            type="number"
+            value={tankDiameter}
+            onChange={(e) => setTankDiameter(e.target.value)}
+            placeholder="Enter tank diameter"
             className="border p-2 rounded"
           />
         </div>
@@ -84,40 +109,6 @@ const CoolDownEstimator = () => {
           <select
             value={tankMaterial.density}
             onChange={(e) => setTankMaterial(materials.find(m => m.density == e.target.value))}
-            className="border p-2 rounded"
-          >
-            {materials.map((material) => (
-              <option key={material.name} value={material.density}>
-                {material.name}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label>Pipeline Total Length (m)</label>
-          <input
-            type="number"
-            value={pipelineLength}
-            onChange={(e) => setPipelineLength(e.target.value)}
-            placeholder="Enter pipeline total length"
-            className="border p-2 rounded"
-          />
-        </div>
-        <div>
-          <label>Pipeline Diameter (mm)</label>
-          <input
-            type="number"
-            value={pipelineDiameter}
-            onChange={(e) => setPipelineDiameter(e.target.value)}
-            placeholder="Enter pipeline diameter"
-            className="border p-2 rounded"
-          />
-        </div>
-        <div>
-          <label>Pipeline Material</label>
-          <select
-            value={pipelineMaterial.density}
-            onChange={(e) => setPipelineMaterial(materials.find(m => m.density == e.target.value))}
             className="border p-2 rounded"
           >
             {materials.map((material) => (
@@ -148,16 +139,6 @@ const CoolDownEstimator = () => {
           />
         </div>
         <div>
-          <label>Contingency Factor (%)</label>
-          <input
-            type="number"
-            value={contingencyFactor}
-            onChange={(e) => setContingencyFactor(e.target.value)}
-            placeholder="Enter contingency factor"
-            className="border p-2 rounded"
-          />
-        </div>
-        <div>
           <label>LIN Flow Rate (m³/hr)</label>
           <input
             type="number"
@@ -177,34 +158,66 @@ const CoolDownEstimator = () => {
             className="border p-2 rounded"
           />
         </div>
-        <button onClick={calculateValues} className="bg-blue-500 text-white p-2 rounded">
-          Calculate
-        </button>
+        <div>
+          <label>Pipeline Length (m)</label>
+          <input
+            type="number"
+            value={pipelineLength}
+            onChange={(e) => setPipelineLength(e.target.value)}
+            placeholder="Enter pipeline length"
+            className="border p-2 rounded"
+          />
+        </div>
+        <div>
+          <label>Pipeline Diameter (mm)</label>
+          <input
+            type="number"
+            value={pipelineDiameter}
+            onChange={(e) => setPipelineDiameter(e.target.value)}
+            placeholder="Enter pipeline diameter"
+            className="border p-2 rounded"
+          />
+        </div>
+        <div>
+          <label>Contingency Factor (%)</label>
+          <input
+            type="number"
+            value={contingencyFactor}
+            onChange={(e) => setContingencyFactor(e.target.value)}
+            placeholder="Enter contingency factor"
+            className="border p-2 rounded"
+          />
+        </div>
+        <div>
+          <label>Cooling Rate (°C/hr)</label>
+          <input
+            type="number"
+            value={coolingRate}
+            onChange={(e) => setCoolingRate(e.target.value)}
+            placeholder="Enter cooling rate"
+            className="border p-2 rounded"
+          />
+        </div>
 
-{results && (
-  <div className="mt-4">
-    <p>
-      LIN Cooldown Duration: {results.LINCooldownDuration.toFixed(2)} hours (
-      {Math.floor(results.LINCooldownDuration / 24)} days{" "}
-      {(results.LINCooldownDuration % 24).toFixed(2)} hours)
-    </p>
-    <p>
-      LNG Cooldown Duration: {results.LNGCooldownDuration.toFixed(2)} hours (
-      {Math.floor(results.LNGCooldownDuration / 24)} days{" "}
-      {(results.LNGCooldownDuration % 24).toFixed(2)} hours)
-    </p>
-    <p>LIN Volume Used: {results.requiredLINVolume.toFixed(2)} m³</p>
-    <p>Final LNG Volume with Safety Factor: {results.finalLNGVolumeWithSafety.toFixed(2)} m³</p>
-    <p>
-      Maximum LIN Flow Rate (before exceeding 12.5°C/hr): {results.maxLINFlowRate.toFixed(2)} m³/hr
-    </p>
-  </div>
-)}
+        <div className="mt-4">
+          <button onClick={calculateValues} className="bg-blue-500 text-white p-2 rounded">
+            Calculate
+          </button>
+        </div>
 
+        {results && (
+          <div className="mt-4 bg-gray-100 p-4 rounded">
+            <h3 className="text-lg font-bold mb-2">Results</h3>
+            <p><strong>LIN Cooling Duration:</strong> {results.LINCooldownDuration.toFixed(2)} hours</p>
+            <p><strong>LNG Cooling Duration:</strong> {results.LNGCooldownDuration.toFixed(2)} hours</p>
+            <p><strong>Required Vapor LIN Volume:</strong> {results.requiredVaporLINVolume.toFixed(2)} m³</p>
+            <p><strong>Required LIN Volume:</strong> {results.requiredLINVolume.toFixed(2)} m³</p>
+            <p><strong>Total LIN Volume with Contingency:</strong> {results.finalLINVolumeWithSafety.toFixed(2)} m³</p>
+            <p><strong>Total Duration:</strong> {results.totalDuration.toFixed(2)} hours</p>
+          </div>
+        )}
       </div>
     </div>
- 
-
   );
 };
 
