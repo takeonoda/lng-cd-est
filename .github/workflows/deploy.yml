@@ -3,8 +3,7 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches:
-      - main  # Change this if your default branch is different
-
+      - main  
 jobs:
   build-deploy:
     runs-on: ubuntu-latest
@@ -16,7 +15,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 22  # Ensure this matches your Node.js version
+          node-version: 22  
 
       - name: Install dependencies
         run: npm install
