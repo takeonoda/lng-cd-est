@@ -48,4 +48,4 @@ The **LNG Cooldown Calculator** is a tool designed to calculate the required coo
 1. Clone the repository:
 
    ```bash
-   git clone https://github.com/yourusername/lng-cooldown-calculator.git
+   git clone https://github.com/takeonoda/lng-cd-est.git
